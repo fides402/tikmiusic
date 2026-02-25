@@ -1,0 +1,5 @@
+{
+  "name": "Discogs TikTok Digger",
+  "description": "A TikTok-style music discovery app using Discogs and YouTube. Select a genre, swipe through random vinyl rips.",
+  "requestFramePermissions": []
+}
