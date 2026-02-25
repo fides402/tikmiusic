@@ -1,14 +1,18 @@
 import express from "express";
 import { createServer as createViteServer } from "vite";
 import axios from "axios";
+import path from "path";
+import { fileURLToPath } from "url";
 
 // User provided keys
 const DISCOGS_TOKEN = "fvYYQHvhAEHVshXGPHYtbAWSlTUNQpnNJcBBbYCB";
 const YOUTUBE_API_KEY = "AIzaSyBiNS-Xtp-Ck-z39OAxVCGtqZNx6h-pVW8";
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = process.env.PORT || 3000;
 
   app.use(express.json());
 
@@ -128,8 +132,16 @@ async function startServer() {
     }
   });
 
-  // Vite middleware
-  if (process.env.NODE_ENV !== "production") {
+  if (process.env.NODE_ENV === "production") {
+    // Serve built frontend
+    const distPath = path.join(__dirname, "dist");
+    app.use(express.static(distPath));
+    // SPA fallback
+    app.get("*", (_req, res) => {
+      res.sendFile(path.join(distPath, "index.html"));
+    });
+  } else {
+    // Vite dev middleware
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",

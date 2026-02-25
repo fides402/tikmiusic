@@ -187,7 +187,7 @@ const VideoCard: React.FC<{ item: FeedItem, isActive: boolean }> = ({ item }) =>
   return (
     <div ref={ref} className="h-screen w-full snap-start relative bg-black flex items-center justify-center border-b border-white/10">
       {/* Video Background */}
-      <div className="absolute inset-0 z-0">
+      <div className="absolute inset-0 z-0 overflow-hidden">
         <ReactPlayerAny
           url={`https://www.youtube.com/watch?v=${item.video.id.videoId}`}
           playing={playing}
@@ -195,13 +195,13 @@ const VideoCard: React.FC<{ item: FeedItem, isActive: boolean }> = ({ item }) =>
           muted={true} // Always muted for background
           width="100%"
           height="100%"
-          className="pointer-events-none scale-150 opacity-60 blur-sm" // Background ambience
+          style={{ position: 'absolute', top: 0, left: 0, transform: 'scale(1.5)', opacity: 0.6, filter: 'blur(4px)', pointerEvents: 'none' }}
           controls={false}
           playsinline={true}
           config={{
             youtube: {
-              playerVars: { 
-                origin: window.location.origin 
+              playerVars: {
+                origin: window.location.origin
               }
             }
           }}
@@ -218,10 +218,11 @@ const VideoCard: React.FC<{ item: FeedItem, isActive: boolean }> = ({ item }) =>
           controls={true}
           width="100%"
           height="100%"
+          style={{ position: 'absolute', top: 0, left: 0 }}
           playsinline={true}
           config={{
             youtube: {
-              playerVars: { 
+              playerVars: {
                 origin: window.location.origin,
                 modestbranding: 1,
                 rel: 0
