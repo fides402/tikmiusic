@@ -88,7 +88,8 @@ async function startServer() {
 
       const items = response.data.items;
       if (!items || items.length === 0) {
-        return res.status(404).json({ error: "No video found" });
+        // Return null instead of 404 to avoid console errors
+        return res.json(null);
       }
 
       res.json(items[0]);

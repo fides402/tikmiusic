@@ -8,7 +8,7 @@ export const fetchRandomRelease = async (genre: string, style?: string): Promise
   return response.data;
 };
 
-export const searchYouTubeVideo = async (query: string): Promise<YouTubeVideo> => {
+export const searchYouTubeVideo = async (query: string): Promise<YouTubeVideo | null> => {
   const response = await axios.get("/api/youtube/search", { params: { query } });
   return response.data;
 };

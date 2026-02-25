@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { YouTubePlayer } from './YouTubePlayer';
+import ReactPlayer from 'react-player';
 import { motion, AnimatePresence } from 'motion/react';
 import { DiscogsRelease, YouTubeVideo, YouTubePlaylist } from '../types';
 import { fetchRandomRelease, searchYouTubeVideo, searchYouTubePlaylist } from '../services/api';
@@ -49,9 +49,12 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({ genre, onBack }) => {
         const query = `${release.title} ${release.year || ''}`;
         let video = undefined;
         try {
-            video = await searchYouTubeVideo(query);
+            const videoResult = await searchYouTubeVideo(query);
+            if (videoResult) {
+                video = videoResult;
+            }
         } catch (e) {
-            console.error("Video not found", e);
+            console.error("Video search error", e);
         }
 
         // Search for playlist
@@ -138,10 +141,10 @@ const VideoCard: React.FC<{ item: FeedItem, isActive: boolean }> = ({ item }) =>
     let timeout: NodeJS.Timeout;
 
     if (inView && !item.loading && item.video) {
-      // Small delay to prevent "play() interrupted by pause()" on fast scroll
+      // Delay to prevent "play() interrupted by pause()" on fast scroll
       timeout = setTimeout(() => {
         setPlaying(true);
-      }, 300);
+      }, 500);
     } else {
       setPlaying(false);
     }
@@ -176,29 +179,56 @@ const VideoCard: React.FC<{ item: FeedItem, isActive: boolean }> = ({ item }) =>
     ? `intent://www.youtube.com/playlist?list=${item.playlist.id.playlistId}#Intent;scheme=http;action=android.intent.action.VIEW;end`
     : `intent://www.youtube.com/watch?v=${item.video.id.videoId}#Intent;scheme=http;action=android.intent.action.VIEW;end`;
 
+  // Use ReactPlayer directly as requested
+  // We need to cast it or use it carefully if types are missing, but importing from 'react-player/youtube' usually works better for bundle size too.
+  // However, the types for react-player might still be tricky.
+  const ReactPlayerAny = ReactPlayer as any;
+
   return (
     <div ref={ref} className="h-screen w-full snap-start relative bg-black flex items-center justify-center border-b border-white/10">
       {/* Video Background */}
       <div className="absolute inset-0 z-0">
-        <YouTubePlayer
-          videoId={item.video.id.videoId}
+        <ReactPlayerAny
+          url={`https://www.youtube.com/watch?v=${item.video.id.videoId}`}
           playing={playing}
+          loop={true}
           muted={true} // Always muted for background
+          width="100%"
+          height="100%"
+          className="pointer-events-none scale-150 opacity-60 blur-sm" // Background ambience
           controls={false}
-          className="w-full h-full pointer-events-none scale-150 opacity-60 blur-sm"
+          playsinline={true}
+          config={{
+            youtube: {
+              playerVars: { 
+                origin: window.location.origin 
+              }
+            }
+          }}
         />
         <div className="absolute inset-0 bg-black/60" /> {/* Overlay for readability */}
       </div>
 
       {/* Main Player */}
       <div className="z-10 w-full max-w-md aspect-video shadow-2xl bg-black relative overflow-hidden rounded-xl border border-white/10 group">
-         <YouTubePlayer
-          videoId={item.video.id.videoId}
+         <ReactPlayerAny
+          url={`https://www.youtube.com/watch?v=${item.video.id.videoId}`}
           playing={playing}
           muted={muted}
           controls={true}
-          className="w-full h-full"
-          onError={(e) => console.error("Player Error:", e)}
+          width="100%"
+          height="100%"
+          playsinline={true}
+          config={{
+            youtube: {
+              playerVars: { 
+                origin: window.location.origin,
+                modestbranding: 1,
+                rel: 0
+              }
+            }
+          }}
+          onError={(e: any) => console.error("Player Error:", e)}
         />
         
         {/* Unmute Overlay Hint (only if muted and playing) */}
